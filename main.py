@@ -1,3 +1,18 @@
+from flask import Flask
+from threading import Thread
+
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Bot is alive"
+
+def run_web():
+    app.run(host='0.0.0.0', port=10000)
+
+def keep_alive():
+    t = Thread(target=run_web)
+    t.start()
 import asyncio
 import json
 import logging
@@ -186,4 +201,6 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
+    keep_alive()
     asyncio.run(main())
+   
