@@ -205,16 +205,16 @@ async def send_daily_poll():
     event_id = new_event(DAILY_TITLE)
 
     try:
-    msg = await bot.send_message(
-        chat_id,
-        f"📌 {DAILY_TITLE}",
-        reply_markup=keyboard(event_id)
+        msg = await bot.send_message(
+            chat_id,
+            f"📌 {DAILY_TITLE}",
+            reply_markup=keyboard(event_id)
     )
 
-    await bot.pin_chat_message(chat_id, msg.message_id)
+        await bot.pin_chat_message(chat_id, msg.message_id)
 
-except Exception as e:
-    logging.warning(f"Ошибка: {e}")
+    except Exception as e:
+        logging.warning(f"Ошибка: {e}")
 
 # ---------------- MAIN ----------------
 
