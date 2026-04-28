@@ -101,7 +101,13 @@ async def cmd_setdaily(message: types.Message) -> None:
     state["chat_id"] = message.chat.id
     save_state()
     
-    await message.answer("Выбери действие:", reply_markup=main_menu())
+    await message.answer(
+    "🚀 <b>Панель голосовалок</b>\n\n"
+    "🟣 Создание голосовалки\n"
+    "Выбери действие 👇",
+    reply_markup=main_menu(),
+    parse_mode="HTML"
+    )
     
     await message.answer(
         f"✅ Группа подключена!\n"
