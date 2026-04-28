@@ -113,9 +113,34 @@ user_waiting_for_poll = set()
 async def handle_menu(message: types.Message):
     text = message.text
 
-    if text == "📊 Создать голосовалку":
-        user_waiting_for_poll.add(message.from_user.id)
-        await message.answer("✏️ Напиши название голосовалки:")
+    if message.from_user.id in user_waiting_for_poll:
+        data = user_waiting_for_poll[message.from_user.id]
+
+        chat_id = data["chat_id"]
+        bot_msg_id = data["bot_msg_id"]
+
+    # удалить сообщение бота
+        await bot.delete_message(chat_id, bot_msg_id)
+
+    # удалить сообщение пользователя
+        await message.delete()
+
+    # создать голосовалку
+        title = message.text
+        event_id = new_event(title)
+
+        await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
+
+        del user_waiting_for_poll[message.from_user.id]
+        return
+
+    if text == "✏️ Свой вариант":
+        msg = await message.answer("✏️ Напиши название голосовалки:")
+
+        user_waiting_for_poll[message.from_user.id] = {
+            "chat_id": message.chat.id,
+            "bot_msg_id": msg.message_id
+        }
         return
 
     if message.from_user.id in user_waiting_for_poll:
@@ -136,6 +161,8 @@ async def handle_menu(message: types.Message):
         event_id = new_event(title)
         await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
         return
+
+    
 
 
 @dp.message(Command("stopdaily"))
