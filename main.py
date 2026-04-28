@@ -168,7 +168,7 @@ async def send_daily_poll() -> None:
 
     # безопасное закрепление
     try:
-        await bot.pin_chat_message(chat_id, msg.message_id, disable_notification=True)
+        await bot.unpin_chat_message(chat_id)
     except Exception as e:
         logging.warning(f"Не удалось закрепить сообщение: {e}")
 
