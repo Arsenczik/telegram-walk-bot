@@ -30,6 +30,8 @@ dp = Dispatcher()
 votes: dict[str, dict] = {}
 state: dict = {"chat_id": None}
 
+user_waiting_for_poll = {}
+
 
 # ---------------- STATE ----------------
 
@@ -107,61 +109,63 @@ async def cmd_setdaily(message: types.Message) -> None:
         "Сделай бота админом и дай право закреплять сообщения."
     )
 
-user_waiting_for_poll = set()
 
 @dp.message()
 async def handle_menu(message: types.Message):
     text = message.text
+    user_id = message.from_user.id
 
-    if message.from_user.id in user_waiting_for_poll:
-        data = user_waiting_for_poll[message.from_user.id]
+    # 1. если ждём ввод названия
+    if user_id in user_waiting_for_poll:
+        data = user_waiting_for_poll[user_id]
 
         chat_id = data["chat_id"]
         bot_msg_id = data["bot_msg_id"]
 
-    # удалить сообщение бота
-        await bot.delete_message(chat_id, bot_msg_id)
+        # удалить сообщение бота
+        try:
+            await bot.delete_message(chat_id, bot_msg_id)
+        except:
+            pass
 
-    # удалить сообщение пользователя
-        await message.delete()
+        # удалить сообщение пользователя
+        try:
+            await message.delete()
+        except:
+            pass
 
-    # создать голосовалку
+        # создать голосовалку
         title = message.text
         event_id = new_event(title)
 
         await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
 
-        del user_waiting_for_poll[message.from_user.id]
+        del user_waiting_for_poll[user_id]
         return
 
+    # 2. свой вариант
     if text == "✏️ Свой вариант":
         msg = await message.answer("✏️ Напиши название голосовалки:")
 
-        user_waiting_for_poll[message.from_user.id] = {
+        user_waiting_for_poll[user_id] = {
             "chat_id": message.chat.id,
             "bot_msg_id": msg.message_id
         }
         return
 
-    if message.from_user.id in user_waiting_for_poll:
-        user_waiting_for_poll.remove(message.from_user.id)
-
-        event_id = new_event(text)
-        await message.answer(f"📌 {text}", reply_markup=keyboard(event_id))
-        return
-
+    # 3. центр
     if text == "📍 Центр":
         title = "Кто будет в центре?"
         event_id = new_event(title)
         await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
         return
 
+    # 4. бестик
     if text == "📍 Бестик":
         title = "Кто будет на бестике?"
         event_id = new_event(title)
         await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
         return
-
     
 
 
@@ -236,7 +240,7 @@ async def send_daily_poll():
             chat_id,
             f"📌 {DAILY_TITLE}",
             reply_markup=keyboard(event_id)
-    )
+        )
 
         await bot.pin_chat_message(chat_id, msg.message_id)
 
