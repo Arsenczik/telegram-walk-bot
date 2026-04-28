@@ -66,8 +66,8 @@ def keyboard(event_id: str) -> InlineKeyboardMarkup:
 def main_menu():
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="📊 Создать голосовалку")],
             [KeyboardButton(text="📍 Центр"), KeyboardButton(text="📍 Бестик")],
+            [KeyboardButton(text="✏️ Свой вариант")],
         ],
         resize_keyboard=True
     )
@@ -140,7 +140,7 @@ async def handle_menu(message: types.Message):
 
         await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
 
-        del user_waiting_for_poll[user_id]
+        user_waiting_for_poll.pop(user_id, None)
         return
 
     # 2. свой вариант
