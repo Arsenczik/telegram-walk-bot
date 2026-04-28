@@ -151,8 +151,11 @@ async def send_daily_poll() -> None:
 
     # безопасное открепление
     if last_id:
-        try:
-            await bot.unpin_chat_message(chat_id, last_id)
+        # безопасное закрепление
+try:
+    await bot.pin_chat_message(chat_id, msg.message_id, disable_notification=True)
+except Exception as e:
+    logging.warning(f"Не удалось закрепить сообщение: {e}")
         except Exception as e:
             logging.warning(f"Не удалось открепить сообщение: {e}")
 
@@ -168,7 +171,7 @@ async def send_daily_poll() -> None:
 
     # безопасное закрепление
     try:
-        await bot.unpin_chat_message(chat_id)
+        await bot.pin_chat_message(chat_id, msg.message_id, disable_notification=True)
     except Exception as e:
         logging.warning(f"Не удалось закрепить сообщение: {e}")
 
@@ -183,7 +186,7 @@ async def main() -> None:
 
     scheduler.add_job(
     send_daily_poll,
-    CronTrigger(minute="*/2", timezone=TIMEZONE),
+    CronTrigger(hour=10, minute=0, timezone=TIMEZONE)
 )
     scheduler.start()
     logging.info(
