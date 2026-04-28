@@ -126,13 +126,15 @@ async def handle_menu(message: types.Message):
         return
 
     if text == "📍 Центр":
-        event_id = new_event("Кто будет в центре?")
-        await message.answer("📍 Центр", reply_markup=keyboard(event_id))
+        title = "Кто будет в центре?"
+        event_id = new_event(title)
+        await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
         return
 
     if text == "📍 Бестик":
-        event_id = new_event("Кто будет на бестике?")
-        await message.answer("📍 Бестик", reply_markup=keyboard(event_id))
+        title = "Кто будет на бестике?"
+        event_id = new_event(title)
+        await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
         return
 
 
@@ -203,11 +205,11 @@ async def send_daily_poll():
     event_id = new_event(DAILY_TITLE)
 
     try:
-        msg = await bot.send_message(
-            chat_id,
-            f"📌 {DAILY_TITLE}",
-            reply_markup=keyboard(event_id)
-        )
+       msg = await bot.send_message(
+           chat_id,
+           f"📌 {DAILY_TITLE}\n\nВыбери действие 👇",
+           reply_markup=main_menu()
+       )
 
         # 🔥 ВАЖНО: просто заменяем закрепление (без unpin логики)
         await bot.pin_chat_message(chat_id, msg.message_id)
