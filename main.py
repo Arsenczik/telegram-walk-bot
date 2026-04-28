@@ -205,18 +205,16 @@ async def send_daily_poll():
     event_id = new_event(DAILY_TITLE)
 
     try:
-       msg = await bot.send_message(
-           chat_id,
-           f"📌 {DAILY_TITLE}\n\nВыбери действие 👇",
-           reply_markup=main_menu()
-       )
+    msg = await bot.send_message(
+        chat_id,
+        f"📌 {DAILY_TITLE}",
+        reply_markup=keyboard(event_id)
+    )
 
-        # 🔥 ВАЖНО: просто заменяем закрепление (без unpin логики)
-        await bot.pin_chat_message(chat_id, msg.message_id)
+    await bot.pin_chat_message(chat_id, msg.message_id)
 
-    except Exception as e:
-        logging.error(f"Ошибка daily poll: {e}")
-
+except Exception as e:
+    logging.warning(f"Ошибка: {e}")
 
 # ---------------- MAIN ----------------
 
