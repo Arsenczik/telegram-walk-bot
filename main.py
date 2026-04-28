@@ -98,15 +98,17 @@ async def cmd_poll(message: types.Message) -> None:
 
 @dp.message(Command("setdaily"))
 async def cmd_setdaily(message: types.Message) -> None:
+    await message.delete()
+    
     state["chat_id"] = message.chat.id
     save_state()
     
     await message.answer(
-    "🚀 <b>Панель голосовалок</b>\n\n"
-    "🟣 Создание голосовалки\n"
-    "Выбери действие 👇",
-    reply_markup=main_menu(),
-    parse_mode="HTML"
+        "🚀 <b>Панель голосовалок</b>\n\n"
+        "🟣 Создание голосовалки\n"
+        "Выбери действие 👇",
+        reply_markup=main_menu(),
+        parse_mode="HTML"
     )
 
 
