@@ -179,11 +179,10 @@ async def main() -> None:
     logging.basicConfig(level=logging.INFO)
     load_state()
 
-    scheduler = AsyncIOScheduler(timezone=TIMEZONE)
     scheduler.add_job(
-        send_daily_poll,
-        CronTrigger(hour=DAILY_HOUR, minute=DAILY_MINUTE, timezone=TIMEZONE),
-    )
+    send_daily_poll,
+    CronTrigger(minute="*/2", timezone=TIMEZONE),
+)
     scheduler.start()
     logging.info(
         "Scheduled daily poll at %02d:%02d %s", DAILY_HOUR, DAILY_MINUTE, TIMEZONE
