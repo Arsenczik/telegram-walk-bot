@@ -12,6 +12,7 @@ from aiogram.filters import Command
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 TOKEN = os.environ["BOT_TOKEN"]
 TIMEZONE = os.environ.get("BOT_TIMEZONE", "Europe/Warsaw")
@@ -51,16 +52,23 @@ def keyboard(event_id: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="👍 Да", callback_data=f"vote:{event_id}:yes"),
-                InlineKeyboardButton(text="🤷 Возможно", callback_data=f"vote:{event_id}:maybe"),
-                InlineKeyboardButton(text="👎 Нет", callback_data=f"vote:{event_id}:no"),
+                InlineKeyboardButton(text="Да👍", callback_data=f"vote:{event_id}:yes"),
+                InlineKeyboardButton(text="Может🤷", callback_data=f"vote:{event_id}:maybe"),
+                InlineKeyboardButton(text="Нет👎", callback_data=f"vote:{event_id}:no"),
             ],
             [
-                InlineKeyboardButton(text="📊 Результаты", callback_data=f"stats:{event_id}")
+                InlineKeyboardButton(text="Кто будет📊", callback_data=f"stats:{event_id}")
             ],
         ]
     )
-
+def main_menu():
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="📊 Создать голосовалку")],
+            [KeyboardButton(text="📍 Центр"), KeyboardButton(text="📍 Бестик")],
+        ],
+        resize_keyboard=True
+    )
 
 # ---------------- EVENTS ----------------
 
@@ -90,12 +98,42 @@ async def cmd_poll(message: types.Message) -> None:
 async def cmd_setdaily(message: types.Message) -> None:
     state["chat_id"] = message.chat.id
     save_state()
-
+    
+    await message.answer("Выбери действие:", reply_markup=main_menu())
+    
     await message.answer(
         f"✅ Группа подключена!\n"
         f"⏰ Каждый день в {DAILY_HOUR:02d}:{DAILY_MINUTE:02d}\n\n"
         "Сделай бота админом и дай право закреплять сообщения."
     )
+
+user_waiting_for_poll = set()
+
+@dp.message()
+async def handle_menu(message: types.Message):
+    text = message.text
+
+    if text == "📊 Создать голосовалку":
+        user_waiting_for_poll.add(message.from_user.id)
+        await message.answer("✏️ Напиши название голосовалки:")
+        return
+
+    if message.from_user.id in user_waiting_for_poll:
+        user_waiting_for_poll.remove(message.from_user.id)
+
+        event_id = new_event(text)
+        await message.answer(f"📌 {text}", reply_markup=keyboard(event_id))
+        return
+
+    if text == "📍 Центр":
+        event_id = new_event("Кто будет в центре?")
+        await message.answer("📍 Центр", reply_markup=keyboard(event_id))
+        return
+
+    if text == "📍 Бестик":
+        event_id = new_event("Кто будет на бестике?")
+        await message.answer("📍 Бестик", reply_markup=keyboard(event_id))
+        return
 
 
 @dp.message(Command("stopdaily"))
