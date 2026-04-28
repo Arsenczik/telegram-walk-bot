@@ -148,25 +148,32 @@ async def send_daily_poll() -> None:
         return
 
     last_id = state.get("last_message_id")
+
+    # безопасное открепление
     if last_id:
         try:
             await bot.unpin_chat_message(chat_id, last_id)
-        except TelegramBadRequest as e:
-            logging.warning("Failed to unpin previous message: %s", e)
+        except Exception as e:
+            logging.warning(f"Не удалось открепить сообщение: {e}")
 
     event_id = new_event(DAILY_TITLE)
-    msg = await bot.send_message(
-        chat_id, f"📌 {DAILY_TITLE}", reply_markup=keyboard(event_id)
-    )
 
     try:
+        msg = await bot.send_message(
+            chat_id, f"📌 {DAILY_TITLE}", reply_markup=keyboard(event_id)
+        )
+    except Exception as e:
+        logging.error(f"Ошибка отправки сообщения: {e}")
+        return
+
+    # безопасное закрепление
+    try:
         await bot.pin_chat_message(chat_id, msg.message_id, disable_notification=True)
-    except TelegramBadRequest as e:
-        logging.warning("Failed to pin message: %s", e)
+    except Exception as e:
+        logging.warning(f"Не удалось закрепить сообщение: {e}")
 
     state["last_message_id"] = msg.message_id
     save_state()
-
 
 async def main() -> None:
     logging.basicConfig(level=logging.INFO)
