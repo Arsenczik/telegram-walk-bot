@@ -15,8 +15,10 @@ from apscheduler.triggers.cron import CronTrigger
 
 TOKEN = os.environ["BOT_TOKEN"]
 TIMEZONE = os.environ.get("BOT_TIMEZONE", "Europe/Warsaw")
-DAILY_HOUR = int(os.environ.get("DAILY_HOUR", "11"))
+
+DAILY_HOUR = int(os.environ.get("DAILY_HOUR", "10"))
 DAILY_MINUTE = int(os.environ.get("DAILY_MINUTE", "0"))
+
 DAILY_TITLE = "Гуляешь сегодня?"
 
 STATE_FILE = Path("state.json")
@@ -25,8 +27,10 @@ bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
 votes: dict[str, dict] = {}
-state: dict = {"chat_id": None, "last_message_id": None}
+state: dict = {"chat_id": None}
 
+
+# ---------------- STATE ----------------
 
 def load_state() -> None:
     global state
@@ -41,6 +45,8 @@ def save_state() -> None:
     STATE_FILE.write_text(json.dumps(state))
 
 
+# ---------------- KEYBOARD ----------------
+
 def keyboard(event_id: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
@@ -49,34 +55,46 @@ def keyboard(event_id: str) -> InlineKeyboardMarkup:
                 InlineKeyboardButton(text="🤷 Возможно", callback_data=f"vote:{event_id}:maybe"),
                 InlineKeyboardButton(text="👎 Нет", callback_data=f"vote:{event_id}:no"),
             ],
-            [InlineKeyboardButton(text="📊 Результаты", callback_data=f"stats:{event_id}")],
+            [
+                InlineKeyboardButton(text="📊 Результаты", callback_data=f"stats:{event_id}")
+            ],
         ]
     )
 
 
+# ---------------- EVENTS ----------------
+
 def new_event(title: str) -> str:
-    short_id = uuid.uuid4().hex[:8]
-    event_id = f"{short_id}_{date.today()}"
+    event_id = uuid.uuid4().hex[:8]
+    event_id = f"{event_id}_{date.today()}"
     votes[event_id] = {"title": title, "users": {}}
     return event_id
 
+
+# ---------------- COMMANDS ----------------
 
 @dp.message(Command("poll"))
 async def cmd_poll(message: types.Message) -> None:
     parts = (message.text or "").split(maxsplit=1)
     title = parts[1].strip() if len(parts) > 1 else "Без названия"
+
     event_id = new_event(title)
-    await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
+
+    await message.answer(
+        f"📌 {title}",
+        reply_markup=keyboard(event_id)
+    )
 
 
 @dp.message(Command("setdaily"))
 async def cmd_setdaily(message: types.Message) -> None:
     state["chat_id"] = message.chat.id
     save_state()
+
     await message.answer(
-        f"✅ Эта группа зарегистрирована для ежедневной голосовалки в "
-        f"{DAILY_HOUR:02d}:{DAILY_MINUTE:02d} ({TIMEZONE}).\n\n"
-        "Сделай меня админом с правом закреплять сообщения."
+        f"✅ Группа подключена!\n"
+        f"⏰ Каждый день в {DAILY_HOUR:02d}:{DAILY_MINUTE:02d}\n\n"
+        "Сделай бота админом и дай право закреплять сообщения."
     )
 
 
@@ -84,12 +102,13 @@ async def cmd_setdaily(message: types.Message) -> None:
 async def cmd_stopdaily(message: types.Message) -> None:
     if state.get("chat_id") == message.chat.id:
         state["chat_id"] = None
-        state["last_message_id"] = None
         save_state()
-        await message.answer("⛔ Ежедневная голосовалка отключена.")
+        await message.answer("⛔ Отключено")
     else:
-        await message.answer("Эта группа не была зарегистрирована.")
+        await message.answer("Эта группа не подключена.")
 
+
+# ---------------- CALLBACKS ----------------
 
 @dp.callback_query()
 async def callbacks(callback: types.CallbackQuery) -> None:
@@ -102,100 +121,82 @@ async def callbacks(callback: types.CallbackQuery) -> None:
 
     action = parts[0]
     event_id = parts[1]
-    event = votes.get(event_id)
 
-    if event is None:
-        await callback.answer("Эта голосовалка больше недоступна.", show_alert=True)
+    event = votes.get(event_id)
+    if not event:
+        await callback.answer("Устарело", show_alert=True)
         return
 
-    if action == "vote" and len(parts) == 3 and parts[2] in ("yes", "maybe", "no"):
+    if action == "vote":
         event["users"][callback.from_user.id] = {
             "name": callback.from_user.first_name,
             "answer": parts[2],
         }
-        await callback.answer("Сохранено ✅")
+        await callback.answer("Сохранено")
 
     elif action == "stats":
-        users = event["users"]
-        groups: dict[str, list[str]] = {"yes": [], "maybe": [], "no": []}
-        for info in users.values():
-            groups[info["answer"]].append(info["name"])
+        groups = {"yes": [], "maybe": [], "no": []}
 
-        def section(title: str, names: list[str]) -> str:
-            if not names:
-                return f"{title}\n- никого"
-            return title + "\n" + "\n".join(f"- {n}" for n in names)
+        for u in event["users"].values():
+            groups[u["answer"]].append(u["name"])
+
+        def fmt(title, arr):
+            return title + "\n" + ("\n".join(arr) if arr else "- никого")
 
         text = (
             f"📊 {event['title']}\n\n"
-            + section("👍 Идут:", groups["yes"])
-            + "\n\n"
-            + section("🤷 Думают:", groups["maybe"])
-            + "\n\n"
-            + section("👎 Не идут:", groups["no"])
+            f"{fmt('👍 Да', groups['yes'])}\n\n"
+            f"{fmt('🤷 Возможно', groups['maybe'])}\n\n"
+            f"{fmt('👎 Нет', groups['no'])}"
         )
 
         await callback.answer(text, show_alert=True)
 
-    else:
-        await callback.answer()
 
+# ---------------- DAILY JOB ----------------
 
-async def send_daily_poll() -> None:
+async def send_daily_poll():
     chat_id = state.get("chat_id")
+
     if not chat_id:
-        logging.info("Daily poll skipped: no chat registered.")
+        logging.info("Нет группы")
         return
-
-    last_id = state.get("last_message_id")
-
-    # безопасное открепление
-    if last_id:
-        # безопасное закрепление
-try:
-    await bot.pin_chat_message(chat_id, msg.message_id, disable_notification=True)
-except Exception as e:
-    logging.warning(f"Не удалось закрепить сообщение: {e}")
-        except Exception as e:
-            logging.warning(f"Не удалось открепить сообщение: {e}")
 
     event_id = new_event(DAILY_TITLE)
 
     try:
         msg = await bot.send_message(
-            chat_id, f"📌 {DAILY_TITLE}", reply_markup=keyboard(event_id)
+            chat_id,
+            f"📌 {DAILY_TITLE}",
+            reply_markup=keyboard(event_id)
         )
+
+        # 🔥 ВАЖНО: просто заменяем закрепление (без unpin логики)
+        await bot.pin_chat_message(chat_id, msg.message_id)
+
     except Exception as e:
-        logging.error(f"Ошибка отправки сообщения: {e}")
-        return
+        logging.error(f"Ошибка daily poll: {e}")
 
-    # безопасное закрепление
-    try:
-        await bot.pin_chat_message(chat_id, msg.message_id, disable_notification=True)
-    except Exception as e:
-        logging.warning(f"Не удалось закрепить сообщение: {e}")
 
-    state["last_message_id"] = msg.message_id
-    save_state()
+# ---------------- MAIN ----------------
 
-async def main() -> None:
+async def main():
     logging.basicConfig(level=logging.INFO)
     load_state()
 
     scheduler = AsyncIOScheduler(timezone=TIMEZONE)
 
     scheduler.add_job(
-    send_daily_poll,
-    CronTrigger(hour=10, minute=0, timezone=TIMEZONE)
-)
-    scheduler.start()
-    logging.info(
-        "Scheduled daily poll at %02d:%02d %s", DAILY_HOUR, DAILY_MINUTE, TIMEZONE
+        send_daily_poll,
+        CronTrigger(hour=DAILY_HOUR, minute=DAILY_MINUTE, timezone=TIMEZONE),
     )
+
+    scheduler.start()
+
+    logging.info(f"Bot started. Daily at {DAILY_HOUR}:{DAILY_MINUTE}")
 
     await dp.start_polling(bot)
 
 
 if __name__ == "__main__":
     asyncio.run(main())
-   
