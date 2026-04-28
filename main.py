@@ -108,12 +108,6 @@ async def cmd_setdaily(message: types.Message) -> None:
     reply_markup=main_menu(),
     parse_mode="HTML"
     )
-    
-    await message.answer(
-        f"✅ Группа подключена!\n"
-        f"⏰ Каждый день в {DAILY_HOUR:02d}:{DAILY_MINUTE:02d}\n\n"
-        "Сделай бота админом и дай право закреплять сообщения."
-    )
 
 
 @dp.message()
