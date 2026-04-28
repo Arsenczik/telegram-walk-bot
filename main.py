@@ -193,9 +193,15 @@ async def main():
 
     scheduler.start()
 
-    logging.info(f"Bot started. Daily at {DAILY_HOUR}:{DAILY_MINUTE}")
+logging.info(f"Bot started. Daily at {DAILY_HOUR}:{DAILY_MINUTE}")
 
-    await dp.start_polling(bot)
+from aiogram.types import BotCommand
+
+await bot.set_my_commands([
+    BotCommand(command="poll", description="📊 Создать голосовалку")
+])
+
+await dp.start_polling(bot)
 
 
 if __name__ == "__main__":
