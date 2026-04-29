@@ -143,18 +143,20 @@ async def handle_menu(message: types.Message):
 
     data = user_waiting_for_poll.get(user_id)
 
-    # 1. режим "свой вариант" — пользователь вводит название
+        # 1. режим "свой вариант" — пользователь вводит название
     if data and data.get("mode") == "custom":
+        # удаляем сообщение меню "Создание голосовалки"
         if data.get("menu_msg_id"):
             try:
-                await message.delete()
-            except Exception as e:
-                logging.warning(f"Не удалось удалить сообщение юзера: {e}")
+                await bot.delete_message(message.chat.id, data["menu_msg_id"])
+            except:
+                pass
 
+        # удаляем сообщение юзера с названием
         try:
             await message.delete()
-        except:
-            pass
+        except Exception as e:
+            logging.warning(f"Не удалось удалить сообщение юзера: {e}")
 
         # удаляем сообщение бота "Напиши название голосовалки 👇"
         if data.get("prompt_msg_id"):
@@ -170,6 +172,7 @@ async def handle_menu(message: types.Message):
 
         user_waiting_for_poll.pop(user_id, None)
         return
+
 
             # 2. кнопка "Свой вариант"
     if text == "✏️ Свой вариант":
