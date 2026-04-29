@@ -164,20 +164,19 @@ async def handle_menu(message: types.Message):
         return
 
     if text == "📍 Центр":
-        try:
-            await message.delete()
-        except:
-            pass
+    try:
+        await message.delete()
+    except:
+        pass
 
-        title = "Кто будет в центре?"
-        event_id = new_event(title)
+    title = "Кто будет в центре?"
+    event_id = new_event(title)
 
     msg = await message.answer(
         f"📌 {title}",
         reply_markup=keyboard(event_id)
     )
 
-    # удаляем сообщение бота с меню (если оно есть)
     data = user_waiting_for_poll.get(user_id)
     if data and data.get("menu_msg_id"):
         try:
@@ -187,16 +186,20 @@ async def handle_menu(message: types.Message):
 
     return
 
-    if text == "📍 Бестик":
-        try:
-            await message.delete()
-        except:
-            pass
 
-        title = "Кто будет на бестике?"
-        event_id = new_event(title)
+if text == "📍 Бестик":
+    try:
+        await message.delete()
+    except:
+        pass
 
-    msg = await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
+    title = "Кто будет на бестике?"
+    event_id = new_event(title)
+
+    msg = await message.answer(
+        f"📌 {title}",
+        reply_markup=keyboard(event_id)
+    )
 
     data = user_waiting_for_poll.get(user_id)
     if data and data.get("menu_msg_id"):
