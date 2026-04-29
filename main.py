@@ -164,10 +164,10 @@ async def handle_menu(message: types.Message):
         return
 
     if text == "📍 Центр":
-    try:
-        await message.delete()
-    except:
-        pass
+        try:
+            await message.delete()
+        except:
+            pass
 
     title = "Кто будет в центре?"
     event_id = new_event(title)
