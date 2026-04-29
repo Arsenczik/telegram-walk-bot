@@ -134,7 +134,7 @@ async def cmd_setdaily(message: types.Message) -> None:
 
 
 
-    @dp.message()
+@dp.message()
 async def handle_menu(message: types.Message):
     text = message.text
     user_id = message.from_user.id
