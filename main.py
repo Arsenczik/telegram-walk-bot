@@ -186,11 +186,11 @@ async def handle_menu(message: types.Message):
 
     return
 
-if text == "📍 Бестик":
-    try:
-        await message.delete()
-    except:
-        pass
+    if text == "📍 Бестик":
+        try:
+            await message.delete()
+        except:
+            pass
 
     title = "Кто будет на бестике?"
     event_id = new_event(title)
