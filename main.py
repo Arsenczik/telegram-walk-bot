@@ -143,25 +143,24 @@ async def handle_menu(message: types.Message):
     data = user_waiting_for_poll.get(user_id)
 
     if data:
-    # удалить меню
-    if data.get("menu_msg_id"):
-        try:
-            await bot.delete_message(message.chat.id, data["menu_msg_id"])
-        except:
-            pass
+        if data.get("menu_msg_id"):
+            try:
+                await bot.delete_message(message.chat.id, data["menu_msg_id"])
+            except:
+                pass
 
     # удалить сообщение "напиши название"
-    if data.get("bot_msg_id"):
-        try:
-            await bot.delete_message(message.chat.id, data["bot_msg_id"])
-        except:
-            pass
+        if data.get("bot_msg_id"):
+            try:
+                await bot.delete_message(message.chat.id, data["bot_msg_id"])
+            except:
+                pass
 
     # удалить сообщение пользователя
-    try:
-        await message.delete()
-    except:
-        pass
+            try:
+                await message.delete()
+            except:   
+                pass
 
     # создать голосовалку
     title = message.text
