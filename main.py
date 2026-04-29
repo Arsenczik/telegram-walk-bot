@@ -146,9 +146,10 @@ async def handle_menu(message: types.Message):
     if data and data.get("mode") == "custom":
         if data.get("menu_msg_id"):
             try:
-                await bot.delete_message(message.chat.id, data["menu_msg_id"])
-            except:
-                pass
+                await message.delete()
+            except Exception as e:
+                logging.warning(f"Не удалось удалить сообщение юзера: {e}")
+
         try:
             await message.delete()
         except:
