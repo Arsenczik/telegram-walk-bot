@@ -163,7 +163,7 @@ async def handle_menu(message: types.Message):
                 reply_markup=keyboard(event_id)
             )
 
-             await message.answer(" ", reply_markup=ReplyKeyboardRemove())
+            await message.answer(" ", reply_markup=ReplyKeyboardRemove())
 
             user_waiting_for_poll.pop(user_id, None)
             return
