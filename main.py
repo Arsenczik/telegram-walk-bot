@@ -169,8 +169,8 @@ async def handle_menu(message: types.Message):
         except:
             pass
 
-    title = "Кто будет в центре?"
-    event_id = new_event(title)
+        title = "Кто будет в центре?"
+        event_id = new_event(title)
 
     msg = await message.answer(
         f"📌 {title}",
@@ -193,8 +193,8 @@ async def handle_menu(message: types.Message):
         except:
             pass
 
-    title = "Кто будет на бестике?"
-    event_id = new_event(title)
+        title = "Кто будет на бестике?"
+        event_id = new_event(title)
 
     msg = await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
 
