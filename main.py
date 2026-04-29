@@ -134,69 +134,67 @@ async def cmd_setdaily(message: types.Message) -> None:
 
 
 
-@dp.message()
+@dp.message(lambda message: message.text is not None)
 async def handle_menu(message: types.Message):
-    text = message.text
+    text = (message.text or "").strip()
     user_id = message.from_user.id
 
     data = user_waiting_for_poll.get(user_id)
 
-    # 1. если пользователь в режиме ввода названия
+    # 1. если ждём ввод текста
     if data:
-
         if data.get("menu_msg_id"):
             try:
                 await bot.delete_message(message.chat.id, data["menu_msg_id"])
             except:
                 pass
 
-            try:
-                await message.delete()
-            except:
-                pass
+        try:
+            await message.delete()
+        except:
+            pass
 
-            title = message.text
-            event_id = new_event(title)
+        title = message.text
+        event_id = new_event(title)
 
-            await message.answer(
-                f"📌 {title}",
-                reply_markup=keyboard(event_id)
-            )
+        await message.answer(
+            f"📌 {title}",
+            reply_markup=keyboard(event_id)
+        )
 
-            await message.answer(" ", reply_markup=ReplyKeyboardRemove())
+        await message.answer(" ", reply_markup=ReplyKeyboardRemove())
 
-            user_waiting_for_poll.pop(user_id, None)
-            return
+        user_waiting_for_poll.pop(user_id, None)
+        return
 
     # 2. Центр
-        if text == "📍 Центр":
-            title = "Кто будет в центре?"
-            event_id = new_event(title)
+    if text == "📍 Центр":
+        title = "Кто будет в центре?"
+        event_id = new_event(title)
 
-            await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
-            await message.answer(" ", reply_markup=ReplyKeyboardRemove())
-            return
+        await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
+        await message.answer(" ", reply_markup=ReplyKeyboardRemove())
+        return
 
     # 3. Бестик
-        if text == "📍 Бестик":
-            title = "Кто будет на бестике?"
-            event_id = new_event(title)
+    if text == "📍 Бестик":
+        title = "Кто будет на бестике?"
+        event_id = new_event(title)
 
-            await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
-            await message.answer(" ", reply_markup=ReplyKeyboardRemove())
-            return
-    
-# 4. свой вариант
-        if text == "✏️ Свой вариант":
-            user_waiting_for_poll[user_id] = {
-                "chat_id": message.chat.id,
-                "menu_msg_id": None
-            }
+        await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
+        await message.answer(" ", reply_markup=ReplyKeyboardRemove())
+        return
 
-            msg = await message.answer("✏️ Напиши свой вариант:")
-            user_waiting_for_poll[user_id]["menu_msg_id"] = msg.message_id
-            return
+    # 4. свой вариант
+    if text == "✏️ Свой вариант":
+        user_waiting_for_poll[user_id] = {
+            "chat_id": message.chat.id,
+            "menu_msg_id": None
+        }
 
+        msg = await message.answer("✏️ Напиши свой вариант:")
+        user_waiting_for_poll[user_id]["menu_msg_id"] = msg.message_id
+        return
 @dp.message(Command("stopdaily"))
 async def cmd_stopdaily(message: types.Message) -> None:
     if state.get("chat_id") == message.chat.id:
