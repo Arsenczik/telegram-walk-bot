@@ -12,7 +12,8 @@ from aiogram.filters import Command
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+
 
 
 TOKEN = os.environ["BOT_TOKEN"]
@@ -166,7 +167,6 @@ async def handle_menu(message: types.Message):
         event_id = new_event(title)
 
         await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
-        await message.answer(" ", reply_markup=ReplyKeyboardRemove())
 
         user_waiting_for_poll.pop(user_id, None)
         return
