@@ -95,6 +95,28 @@ async def cmd_poll(message: types.Message) -> None:
         reply_markup=keyboard(event_id)
     )
 
+@dp.message(Command("menu"))
+async def cmd_menu(message: types.Message):
+    user_id = message.from_user.id
+
+    # удалить команду /menu
+    try:
+        await message.delete()
+    except:
+        pass
+
+    # отправить меню
+    msg = await message.answer(
+        "🟣 <b>Создание голосовалки</b>",
+        reply_markup=main_menu(),
+        parse_mode="HTML"
+    )
+
+    # сохранить сообщение меню
+    user_waiting_for_poll[user_id] = {
+        "chat_id": message.chat.id,
+        "menu_msg_id": msg.message_id
+    }
 
 @dp.message(Command("setdaily"))
 async def cmd_setdaily(message: types.Message) -> None:
@@ -118,55 +140,75 @@ async def handle_menu(message: types.Message):
     user_id = message.from_user.id
 
     # 1. если ждём ввод названия
-    if user_id in user_waiting_for_poll:
-        data = user_waiting_for_poll[user_id]
+    data = user_waiting_for_poll.get(user_id)
 
-        chat_id = data["chat_id"]
-        bot_msg_id = data["bot_msg_id"]
-
-        # удалить сообщение бота
+    if data:
+    # удалить меню
+    if data.get("menu_msg_id"):
         try:
-            await bot.delete_message(chat_id, bot_msg_id)
+            await bot.delete_message(message.chat.id, data["menu_msg_id"])
         except:
             pass
 
-        # удалить сообщение пользователя
+    # удалить сообщение "напиши название"
+    if data.get("bot_msg_id"):
         try:
-            await message.delete()
+            await bot.delete_message(message.chat.id, data["bot_msg_id"])
         except:
             pass
 
-        # создать голосовалку
-        title = message.text
+    # удалить сообщение пользователя
+    try:
+        await message.delete()
+    except:
+        pass
+
+    # создать голосовалку
+    title = message.text
+    event_id = new_event(title)
+
+    await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
+
+    # убрать клавиатуру
+    await message.answer(" ", reply_markup=ReplyKeyboardRemove())
+
+    user_waiting_for_poll.pop(user_id, None)
+    return
+
+    # 3. центр
+    if text == "📍 Центр":
+        data = user_waiting_for_poll.get(user_id)
+        if data:
+            try:
+                await bot.delete_message(data["chat_id"], data["menu_msg_id"])
+            except:
+                pass
+
+        title = "Кто будет в центре?"
         event_id = new_event(title)
 
         await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
+        await message.answer(" ", reply_markup=ReplyKeyboardRemove())
 
         user_waiting_for_poll.pop(user_id, None)
         return
 
-    # 2. свой вариант
-    if text == "✏️ Свой вариант":
-        msg = await message.answer("✏️ Напиши название голосовалки:")
-
-        user_waiting_for_poll[user_id] = {
-            "chat_id": message.chat.id,
-            "bot_msg_id": msg.message_id
-        }
-        return
-
-    # 3. центр
-    if text == "📍 Центр":
-        title = "Кто будет в центре?"
-        event_id = new_event(title)
-        await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
-        return
-
     # 4. бестик
     if text == "📍 Бестик":
+        data = user_waiting_for_poll.get(user_id)
+        if data:
+            try:
+                await bot.delete_message(data["chat_id"], data["menu_msg_id"])
+            except:
+                pass
+
         title = "Кто будет на бестике?"
         event_id = new_event(title)
+
         await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
+        await message.answer(" ", reply_markup=ReplyKeyboardRemove())
+
+        user_waiting_for_poll.pop(user_id, None)
         return
     
 
