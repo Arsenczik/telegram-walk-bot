@@ -170,12 +170,18 @@ async def handle_menu(message: types.Message):
         user_waiting_for_poll.pop(user_id, None)
         return
 
-    # 2. кнопка "Свой вариант"
+        # 2. кнопка "Свой вариант"
     if text == "✏️ Свой вариант":
+        prompt = await message.answer("Напиши название голосовалки 👇")
         if data:
-            prompt = await message.answer("Напиши название голосовалки 👇")
             data["mode"] = "custom"
             data["prompt_msg_id"] = prompt.message_id
+        else:
+            user_waiting_for_poll[user_id] = {
+                "chat_id": message.chat.id,
+                "mode": "custom",
+                "prompt_msg_id": prompt.message_id
+            }
         return
 
     # 3. кнопка "Центр"
