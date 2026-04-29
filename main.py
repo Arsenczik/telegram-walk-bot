@@ -163,27 +163,47 @@ async def handle_menu(message: types.Message):
         user_waiting_for_poll.pop(user_id, None)
         return
 
-    # 2. кнопки меню
     if text == "📍 Центр":
-        title = "Кто будет в центре?"
-        event_id = new_event(title)
-        await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
-        return
+        try:
+            await message.delete()
+        except:
+            pass
+
+    title = "Кто будет в центре?"
+    event_id = new_event(title)
+
+    msg = await message.answer(
+        f"📌 {title}",
+        reply_markup=keyboard(event_id)
+    )
+
+    # удаляем сообщение бота с меню (если оно есть)
+    data = user_waiting_for_poll.get(user_id)
+    if data and data.get("menu_msg_id"):
+        try:
+            await bot.delete_message(message.chat.id, data["menu_msg_id"])
+        except:
+            pass
+
+    return
 
     if text == "📍 Бестик":
-        title = "Кто будет на бестике?"
-        event_id = new_event(title)
-        await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
-        return
+        try:
+            await message.delete()
+        except:
+            pass
 
-    if text == "✏️ Свой вариант":
-        user_waiting_for_poll[user_id] = {
-            "mode": "custom",
-            "chat_id": message.chat.id,
-            "menu_msg_id": msg.message_id
-    }
-        await message.answer("✏️ Напиши свой вариант:")
-        return
+    title = "Кто будет на бестике?"
+    event_id = new_event(title)
+
+    msg = await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
+
+    data = user_waiting_for_poll.get(user_id)
+    if data and data.get("menu_msg_id"):
+        try:
+            await bot.delete_message(message.chat.id, data["menu_msg_id"])
+        except:
+            pass
 
     return
 # ---------------- CALLBACKS ----------------
