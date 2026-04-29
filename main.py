@@ -300,7 +300,7 @@ async def main():
     from aiogram.types import BotCommand
 
     await bot.set_my_commands([
-        BotCommand(command="menu", description="menutest"),
+        BotCommand(command="menu", description="открыть меню"),
     ])
 
     logging.info(f"Bot started. Daily at {DAILY_HOUR}:{DAILY_MINUTE}")
