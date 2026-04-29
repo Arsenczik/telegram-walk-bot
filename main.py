@@ -154,6 +154,13 @@ async def handle_menu(message: types.Message):
         except:
             pass
 
+        # удаляем сообщение бота "Напиши название голосовалки 👇"
+        if data.get("prompt_msg_id"):
+            try:
+                await bot.delete_message(message.chat.id, data["prompt_msg_id"])
+            except:
+                pass
+
         title = text
         event_id = new_event(title)
 
@@ -166,8 +173,9 @@ async def handle_menu(message: types.Message):
     # 2. кнопка "Свой вариант"
     if text == "✏️ Свой вариант":
         if data:
+            prompt = await message.answer("Напиши название голосовалки 👇")
             data["mode"] = "custom"
-        await message.answer("Напиши название голосовалки 👇")
+            data["prompt_msg_id"] = prompt.message_id
         return
 
     # 3. кнопка "Центр"
