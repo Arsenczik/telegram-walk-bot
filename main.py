@@ -293,7 +293,7 @@ async def main():
 
     await bot.set_my_commands([
         BotCommand(command="poll", description="Создать голосовалку📊"),
-        BotCommand(command="menu", description="menutest")
+        BotCommand(command="menu", description="menutest"),
     ])
 
     logging.info(f"Bot started. Daily at {DAILY_HOUR}:{DAILY_MINUTE}")
