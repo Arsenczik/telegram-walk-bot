@@ -292,7 +292,7 @@ async def main():
     from aiogram.types import BotCommand
 
     await bot.set_my_commands([
-        BotCommand(command="poll", description="Создать голосовалку📊")
+        BotCommand(command="poll", description="Создать голосовалку📊"),
         BotCommand(command="menu", description="menutest")
     ])
 
