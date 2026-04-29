@@ -186,7 +186,6 @@ async def handle_menu(message: types.Message):
 
     return
 
-
 if text == "📍 Бестик":
     try:
         await message.delete()
