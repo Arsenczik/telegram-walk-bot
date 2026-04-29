@@ -141,8 +141,8 @@ async def handle_menu(message: types.Message):
 
     data = user_waiting_for_poll.get(user_id)
 
-    # 1. режим ожидания ввода
-    if data:
+    # 1. режим "свой вариант"
+    if data and data.get("mode") == "custom":
         if data.get("menu_msg_id"):
             try:
                 await bot.delete_message(message.chat.id, data["menu_msg_id"])
@@ -178,25 +178,14 @@ async def handle_menu(message: types.Message):
 
     if text == "✏️ Свой вариант":
         user_waiting_for_poll[user_id] = {
+            "mode": "custom",
             "chat_id": message.chat.id,
-            "menu_msg_id": None
-        }
+            "menu_msg_id": msg.message_id
+    }
         await message.answer("✏️ Напиши свой вариант:")
         return
 
-    # 3. игнор всего остального
     return
-    
-@dp.message(Command("stopdaily"))
-async def cmd_stopdaily(message: types.Message) -> None:
-    if state.get("chat_id") == message.chat.id:
-        state["chat_id"] = None
-        save_state()
-        await message.answer("⛔ Отключено")
-    else:
-        await message.answer("Эта группа не подключена.")
-
-
 # ---------------- CALLBACKS ----------------
 
 @dp.callback_query()
