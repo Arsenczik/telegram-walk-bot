@@ -164,6 +164,13 @@ async def handle_menu(message: types.Message):
         user_waiting_for_poll.pop(user_id, None)
         return
 
+        if text == "✏️ Свой вариант":
+                if data:
+                    data["mode"] = "custom"
+                await message.answer("Напиши название голосовалки 👇")
+                return
+
+
         if text == "📍 Центр":
              try:
                 await message.delete()
