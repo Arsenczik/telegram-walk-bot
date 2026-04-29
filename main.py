@@ -163,51 +163,51 @@ async def handle_menu(message: types.Message):
         user_waiting_for_poll.pop(user_id, None)
         return
 
-    if text == "📍 Центр":
-        try:
-            await message.delete()
-        except:
-            pass
+        if text == "📍 Центр":
+             try:
+                await message.delete()
+            except:
+                pass
 
-    title = "Кто будет в центре?"
-    event_id = new_event(title)
+        title = "Кто будет в центре?"
+        event_id = new_event(title)
 
-    msg = await message.answer(
-        f"📌 {title}",
-        reply_markup=keyboard(event_id)
-    )
+        msg = await message.answer(
+            f"📌 {title}",
+            reply_markup=keyboard(event_id)
+        )
 
-    data = user_waiting_for_poll.get(user_id)
-    if data and data.get("menu_msg_id"):
-        try:
-            await bot.delete_message(message.chat.id, data["menu_msg_id"])
-        except:
-            pass
+        data = user_waiting_for_poll.get(user_id)
+        if data and data.get("menu_msg_id"):
+            try:
+                await bot.delete_message(message.chat.id, data["menu_msg_id"])
+            except:
+                pass
 
-    return
+        return
 
-    if text == "📍 Бестик":
-        try:
-            await message.delete()
-        except:
-            pass
+        if text == "📍 Бестик":
+            try:
+                await message.delete()
+            except:
+                pass
 
-    title = "Кто будет на бестике?"
-    event_id = new_event(title)
+        title = "Кто будет на бестике?"
+        event_id = new_event(title)
 
-    msg = await message.answer(
-        f"📌 {title}",
-        reply_markup=keyboard(event_id)
-    )
+        msg = await message.answer(
+            f"📌 {title}",
+            reply_markup=keyboard(event_id)
+        )
 
-    data = user_waiting_for_poll.get(user_id)
-    if data and data.get("menu_msg_id"):
-        try:
-            await bot.delete_message(message.chat.id, data["menu_msg_id"])
-        except:
-            pass
+        data = user_waiting_for_poll.get(user_id)
+        if data and data.get("menu_msg_id"):
+            try:
+                await bot.delete_message(message.chat.id, data["menu_msg_id"])
+            except:
+                pass
 
-    return
+        return
 # ---------------- CALLBACKS ----------------
 
 @dp.callback_query()
