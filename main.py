@@ -76,7 +76,6 @@ def main_menu():
 
 def new_event(title: str) -> str:
     event_id = uuid.uuid4().hex[:8]
-    event_id = f"{event_id}_{date.today()}"
     votes[event_id] = {"title": title, "users": {}}
     return event_id
 
@@ -134,83 +133,69 @@ async def cmd_setdaily(message: types.Message) -> None:
     )
 
 
-@dp.message()
+
+    @dp.message()
 async def handle_menu(message: types.Message):
     text = message.text
     user_id = message.from_user.id
 
-    # 1. если ждём ввод названия
     data = user_waiting_for_poll.get(user_id)
 
+    # 1. если пользователь в режиме ввода названия
     if data:
+
         if data.get("menu_msg_id"):
             try:
                 await bot.delete_message(message.chat.id, data["menu_msg_id"])
             except:
                 pass
 
-    # удалить сообщение "напиши название"
-        if data.get("bot_msg_id"):
-            try:
-                await bot.delete_message(message.chat.id, data["bot_msg_id"])
-            except:
-                pass
-
-    # удалить сообщение пользователя
             try:
                 await message.delete()
-            except:   
-                pass
-
-    # создать голосовалку
-    title = message.text
-    event_id = new_event(title)
-
-    await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
-
-    # убрать клавиатуру
-    await message.answer(" ", reply_markup=ReplyKeyboardRemove())
-
-    user_waiting_for_poll.pop(user_id, None)
-    return
-
-    # 3. центр
-    if text == "📍 Центр":
-        data = user_waiting_for_poll.get(user_id)
-        if data:
-            try:
-                await bot.delete_message(data["chat_id"], data["menu_msg_id"])
             except:
                 pass
 
-        title = "Кто будет в центре?"
-        event_id = new_event(title)
+            title = message.text
+            event_id = new_event(title)
 
-        await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
-        await message.answer(" ", reply_markup=ReplyKeyboardRemove())
+            await message.answer(
+                f"📌 {title}",
+                reply_markup=keyboard(event_id)
+            )
 
-        user_waiting_for_poll.pop(user_id, None)
-        return
+             await message.answer(" ", reply_markup=ReplyKeyboardRemove())
 
-    # 4. бестик
-    if text == "📍 Бестик":
-        data = user_waiting_for_poll.get(user_id)
-        if data:
-            try:
-                await bot.delete_message(data["chat_id"], data["menu_msg_id"])
-            except:
-                pass
+            user_waiting_for_poll.pop(user_id, None)
+            return
 
-        title = "Кто будет на бестике?"
-        event_id = new_event(title)
+    # 2. Центр
+        if text == "📍 Центр":
+            title = "Кто будет в центре?"
+            event_id = new_event(title)
 
-        await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
-        await message.answer(" ", reply_markup=ReplyKeyboardRemove())
+            await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
+            await message.answer(" ", reply_markup=ReplyKeyboardRemove())
+            return
 
-        user_waiting_for_poll.pop(user_id, None)
-        return
+    # 3. Бестик
+        if text == "📍 Бестик":
+            title = "Кто будет на бестике?"
+            event_id = new_event(title)
+
+            await message.answer(f"📌 {title}", reply_markup=keyboard(event_id))
+            await message.answer(" ", reply_markup=ReplyKeyboardRemove())
+            return
     
+# 4. свой вариант
+        if text == "✏️ Свой вариант":
+            user_waiting_for_poll[user_id] = {
+                "chat_id": message.chat.id,
+                "menu_msg_id": None
+            }
 
+            msg = await message.answer("✏️ Напиши свой вариант:")
+            user_waiting_for_poll[user_id]["menu_msg_id"] = msg.message_id
+            return
 
 @dp.message(Command("stopdaily"))
 async def cmd_stopdaily(message: types.Message) -> None:
@@ -238,7 +223,8 @@ async def callbacks(callback: types.CallbackQuery) -> None:
 
     event = votes.get(event_id)
     if not event:
-        await callback.answer("Устарело", show_alert=True)
+        await callback.message.answer("Устарело")
+        await callback.answer()
         return
 
     if action == "vote":
